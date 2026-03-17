@@ -25,3 +25,13 @@ try {
 }
 
 export { app, auth, db, analytics };
+
+// Development-only debug: prints which Firebase API key is bundled
+if (import.meta.env.DEV) {
+  try {
+    // eslint-disable-next-line no-console
+    console.log('Firebase config (apiKey):', firebaseConfig.apiKey);
+  } catch (e) {
+    // ignore
+  }
+}
