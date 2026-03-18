@@ -19,7 +19,11 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const user = await loginWithGoogle();
+      // In the Firebase-free stub we prompt for the Google email to simulate
+      // an OAuth response. Enter your admin email to land on the admin panel.
+      const simulatedEmail = window.prompt('Enter Google account email to continue:');
+      if (!simulatedEmail) throw new Error('Google login cancelled');
+      const user = await loginWithGoogle(simulatedEmail);
       if (user.role === 'admin') {
         navigate('/admin');
       } else {
@@ -69,7 +73,7 @@ export default function Login() {
         </div>
 
         {/* Toggle Login / SignUp */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-pill)', padding: '0.25rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', background: 'var(--glass-opacity-5)', borderRadius: 'var(--radius-pill)', padding: '0.25rem', marginBottom: '2rem' }}>
           <button
             type="button"
             onClick={() => { setIsSignUp(false); setError(''); }}
@@ -120,7 +124,7 @@ export default function Login() {
                   required
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+                  style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--glass-opacity-10)', color: 'var(--text-primary)' }}
                   placeholder="John Doe"
                 />
               </div>
@@ -134,7 +138,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+              style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--glass-opacity-10)', color: 'var(--text-primary)' }}
               placeholder="admin@flux-ehub.com"
             />
           </div>
@@ -145,7 +149,7 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
+              style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--glass-opacity-10)', color: 'var(--text-primary)' }}
               placeholder="••••••••"
             />
           </div>
