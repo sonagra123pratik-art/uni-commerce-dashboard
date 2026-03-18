@@ -1,14 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -17,85 +7,60 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState(null);
+  // This AuthContext is a lightweight stub that removes Firebase Auth dependency.
+  // It determines admin vs user by hostname: requests to `app.<your-domain>` are treated
+  // as admin clients. The rest of the app keeps the same `useAuth()` API.
 
   const ADMIN_EMAIL = 'sonagra123pratik@gmail.com';
 
-  const checkAndSetRole = async (user) => {
-    if (user.email === ADMIN_EMAIL) {
-      setRole('admin');
-      return 'admin';
-    } else {
-      setRole('user');
-      return 'user';
-    }
+  const getRoleFromHost = () => {
+    try {
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      if (host && host.startsWith('app.')) return 'admin';
+    } catch (e) {}
+    return 'user';
   };
 
-  const login = async (email, password) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const userRole = await checkAndSetRole(userCredential.user);
-    return { ...userCredential.user, role: userRole };
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState(getRoleFromHost());
+
+  useEffect(() => {
+    // On mount, set a default currentUser for admin host so admin dashboard works without login.
+    if (role === 'admin') {
+      setCurrentUser({ email: ADMIN_EMAIL, displayName: 'Administrator' });
+    } else {
+      setCurrentUser(null);
+    }
+    setLoading(false);
+  }, [role]);
+
+  // Public API kept similar to original, but now implemented locally without Firebase.
+  const login = async (email) => {
+    const user = { email, displayName: email.split('@')[0] };
+    setCurrentUser(user);
+    setRole(email === ADMIN_EMAIL ? 'admin' : 'user');
+    return { ...user, role: email === ADMIN_EMAIL ? 'admin' : 'user' };
   };
 
   const signup = async (email, password, companyName, gstin) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // Save additional user info to Firestore
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      companyName: companyName,
-      gstin: gstin,
-      role: 'user', // newly signed up users are standard users
-      createdAt: new Date()
-    });
-    
-    await checkAndSetRole(user);
+    const user = { email, displayName: email.split('@')[0], companyName, gstin };
+    setCurrentUser(user);
+    setRole('user');
     return { ...user, role: 'user' };
   };
-  
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    const user = userCredential.user;
-    
-    // Check if user document exists, if not create it
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-    
-    if (!userDocSnap.exists() && user.email !== ADMIN_EMAIL) {
-      await setDoc(userDocRef, {
-        email: user.email,
-        displayName: user.displayName,
-        role: 'user',
-        createdAt: new Date()
-      });
-    }
 
-    const userRole = await checkAndSetRole(user);
-    return { ...user, role: userRole };
+  const loginWithGoogle = async () => {
+    const user = { email: ADMIN_EMAIL, displayName: 'Administrator' };
+    setCurrentUser(user);
+    setRole('admin');
+    return { ...user, role: 'admin' };
   };
 
   const logout = async () => {
-    await signOut(auth);
-    setRole(null);
+    setCurrentUser(null);
+    setRole(getRoleFromHost());
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        await checkAndSetRole(user);
-      } else {
-        setRole(null);
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
 
   const value = {
     currentUser,
