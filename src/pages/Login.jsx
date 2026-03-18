@@ -15,25 +15,10 @@ export default function Login() {
   const { login, signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const handleGoogleLogin = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      // In the Firebase-free stub we prompt for the Google email to simulate
-      // an OAuth response. Enter your admin email to land on the admin panel.
-      const simulatedEmail = window.prompt('Enter Google account email to continue:');
-      if (!simulatedEmail) throw new Error('Google login cancelled');
-      const user = await loginWithGoogle(simulatedEmail);
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      setError(err.message || 'Google Authentication failed');
-    } finally {
-      setLoading(false);
-    }
+  const handleGoogleLogin = () => {
+    // Start server-side OAuth flow. The server will send a verification email
+    // and the user should follow the link to complete signup.
+    window.location.href = '/api/auth/start';
   };
 
   const handleSubmit = async (e) => {
