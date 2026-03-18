@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import jwt from 'jsonwebtoken';
 import sgMail from '@sendgrid/mail';
 
